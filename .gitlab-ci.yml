@@ -4,6 +4,7 @@ pages:
     - mkdir .public
     - cp index.html .public  
     - cp icon.png logo.png .public  
+    - cp cvTest.png .public  
     - cp blob-stream.js pdfkit.standalone.js .public  
     - mv .public public
   artifacts:
