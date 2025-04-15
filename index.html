@@ -102,10 +102,7 @@
 					 */
 
 					//Get canvas information
-					var canvas = document.getElementById('canvas');
 					let canvases = []; // Global canvas list
-
-					var ctx = canvas.getContext('2d');
 
 					var watermarkText = "My Privacy watermark"
 					var textSpace = 8
@@ -115,6 +112,8 @@
 
 					var fileName = "Dummy_CV_test_file"
 					function generate(){ 
+						canvases = [];
+
 						watermarkText = document.getElementById('watermarkText').value;
 						textSpace = Number(document.getElementById('textSpace').value);
 						lineSpace = Number(document.getElementById('lineSpace').value);
