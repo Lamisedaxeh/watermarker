@@ -2,10 +2,11 @@
 <html lang='en'> 
 	<head> 
 		<meta charset='utf-8'> 
-		<title>Watermarker offline</title> 
+		<title>Offline Watermarker</title> 
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+		<link rel="icon" type="image/png" href="./icon.png" />
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
@@ -15,6 +16,15 @@
 		<script src="./blob-stream.js"></script><!--TODO CHANGE ME -->
 	</head> 
 	<body>
+		<nav class="navbar bg-light mb-4" style="max-height: 6vh">
+		  <div class="container-fluid">
+		    <a class="navbar-brand d-flex align-items-center" href="#">
+		      <img src="logo.png" alt="Logo" width="154" height="60" class="d-inline-block align-text-top me-2">
+		      <span class="fs-5">Offline Watermarker </span>
+		    </a>
+		  </div>
+		</nav>
+
 		<div class="container">
 			<div class=row>
 				<div class=col>
@@ -81,7 +91,7 @@
 					</form>
 
 				</div>
-				<div class="col" id="canvasContainer">
+				<div class="col" style="max-height: 92vh; overflow: scroll;" id="canvasContainer">
 					<canvas style="max-width: 100%;max-height: 100%;" id="canvas"></canvas>
 				</div>
 
@@ -143,6 +153,7 @@
 
 						if (document.getElementById("imageLoader").files[0]){ // If file is uploaded
 							var file = document.getElementById("imageLoader").files[0];
+							fileName = file.name
 
 							if (file.type === "application/pdf") { // Case the file is a pdf // TODO rework pdf part
 								const canvasContainer = document.getElementById('canvasContainer');
@@ -180,7 +191,6 @@
 								};
 								reader.readAsArrayBuffer(file);
 							} else { // Case file uploaded but not a pdf
-								fileName = file.name
 								reader.readAsDataURL(file);
 
 							}
