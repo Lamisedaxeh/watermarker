@@ -6,18 +6,13 @@
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 		<!--<script src=" https://cdn.jsdelivr.net/npm/pdfkit@0.13.0/js/pdfkit.standalone.min.js "></script>-->
 		<script src="./pdfkit.standalone.js"></script><!--TODO CHANGE ME -->
 		<!--<script src=" https://cdn.jsdelivr.net/npm/blob-stream@0.1.3/index.min.js "></script>-->
 		<script src="./blob-stream.js"></script><!--TODO CHANGE ME -->
-
-
-
-
-		<!--
-		<script src=" https://cdn.jsdelivr.net/npm/pdfkit@0.13.0/js/pdfkit.standalone.min.js "></script> 
-		<script src=" https://cdn.jsdelivr.net/npm/blob-stream@0.1.3/index.min.js "></script> 
-		-->
 	</head> 
 	<body>
 		<div class="container">
@@ -39,7 +34,7 @@
 
 						<div class="mb-3">
 							<label for="textSize" class="form-label">Text size : </label>
-							<input type="range" class="form-range" min="3" max="75" step="1" value="25" id="textSize" aria-describedby="textSizeHelp">
+							<input type="range" class="form-range" min="3" max="150" step="1" value="25" id="textSize" aria-describedby="textSizeHelp">
 							<div id="textSizeHelp" class="form-text">Change the font size.</div>
 						</div>
 
@@ -86,41 +81,21 @@
 					</form>
 
 				</div>
-				<div class="col">
+				<div class="col" id="canvasContainer">
 					<canvas style="max-width: 100%;max-height: 100%;" id="canvas"></canvas>
 				</div>
 
 				<script>
-					/* Form TODO :
-					- Custom space in line
-						- Verify all type of image
-						- Import PDF
-						- Import PDF multi page
-						- Export PDF multi page
-						- Export page PDF to multi png in zip 
+					/* TODO :
+						- Verify type of image
+						- Idea : export page PDF to multi png in zip 
 					 */
 
 					//Get canvas information
 					var canvas = document.getElementById('canvas');
+					let canvases = []; // Global canvas list
+
 					var ctx = canvas.getContext('2d');
-
-					//Handle the image upload into canvas 
-					//https://jsfiddle.net/influenztial/qy7h5/
-					/*var imageLoader = document.getElementById('imageLoader');
-					//imageLoader.addEventListener('change', handleImage, false);
-					function handleImage(e){
-						var reader = new FileReader();
-						reader.onload = function(event){
-							var img = ne	Downloadw Image();
-							img.onload = function(){
-								drawImage(img);
-								drawTxt('1234567');
-							}
-							img.src = event.target.result;
-						}
-						reader.readAsDataURL(e.target.files[0]);
-					}*/
-
 
 					var watermarkText = "My Privacy watermark"
 					var textSpace = 8
@@ -147,21 +122,69 @@
 						}*/
 
 
-						console.log("generating canvas")
 						var reader = new FileReader();
-						reader.onload = function(event){
+						reader.onload = function(event){ 
 							var img = new Image();
 							img.onload = function(){
-								drawImage(img);
-								drawTxt(watermarkText);
+								const canvas = document.createElement("canvas");
+								canvas.style.maxWidth = "100%";
+								canvas.style.maxHeight = "100%";
+								canvas.id = "canvas-single";
+								canvasContainer.innerHTML = "";
+								canvasContainer.appendChild(canvas);
+								canvases = [canvas]; // Set single canvas in list
+
+								drawImage(canvas, img);
+
+								drawTxt(canvas, watermarkText);
 							}
 							img.src = event.target.result;
 						}
-						if (document.getElementById("imageLoader").files[0]){
+
+						if (document.getElementById("imageLoader").files[0]){ // If file is uploaded
 							var file = document.getElementById("imageLoader").files[0];
-							fileName = file.name
-							reader.readAsDataURL(file);
-						} else {
+
+							if (file.type === "application/pdf") { // Case the file is a pdf // TODO rework pdf part
+								const canvasContainer = document.getElementById('canvasContainer');
+
+								reader.onload = function (e) {
+									const loadingTask = pdfjsLib.getDocument({ data: e.target.result });
+									loadingTask.promise.then(function (pdf) {
+										canvasContainer.innerHTML = ""; // Clear previous canvases
+										for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+											pdf.getPage(pageNumber).then(function (page) {
+												const canvas = document.createElement("canvas");
+												const ctx = canvas.getContext("2d");
+												canvas.style.maxWidth = "100%";
+												canvas.style.maxHeight = "100%";
+												canvas.id = `canvas-${pageNumber}`;
+												canvasContainer.appendChild(canvas);
+												canvases.push(canvas); // Add to global canvas list
+
+
+												const viewport = page.getViewport({ scale: 2 });
+												canvas.height = viewport.height;
+												canvas.width = viewport.width;
+
+												const renderContext = {
+													canvasContext: ctx,
+													viewport: viewport
+												};
+
+												page.render(renderContext).promise.then(() => {
+													drawTxt(canvas, watermarkText);
+												});
+											});
+										}
+									});
+								};
+								reader.readAsArrayBuffer(file);
+							} else { // Case file uploaded but not a pdf
+								fileName = file.name
+								reader.readAsDataURL(file);
+
+							}
+						} else { // No file uploaded
 							fetch("./cvTest.png")
 								.then(res => res.blob()) // Gets the response and returns it as a blob
 								.then(blob => {
@@ -172,14 +195,20 @@
 					}
 
 					//Draw the image on canvas
-					function drawImage(img){
+					function drawImage(canvas, img){
+						const ctx = canvas.getContext("2d");
+
+
 						canvas.width = img.width;
 						canvas.height = img.height;
 						ctx.drawImage(img,0,0);
 					}
 
 					//Add watermark to canvas
-					function drawTxt(txt){
+					function drawTxt(canvas, txt){
+						const ctx = canvas.getContext("2d");
+
+
 						//https://jsfiddle.net/y0b6fv5s/22/
 						var offsetWidth = canvas.width/2;
 						var offsetHeight = canvas.height/2;
@@ -196,11 +225,10 @@
 						//Watermark settings
 						ctx.font = parseFloat(document.getElementById('textSize').value) + "px Arial";//TODO Change with a case size fixed font
 						var txtHeight=ctx.measureText("A").actualBoundingBoxAscent + ctx.measureText("A").actualBoundingBoxDescent; // calc the text Height
-						var offsetLeft= ctx.measureText("A").width * offsetSpace; // SizeOfLetter * number of char to offset //TODO
-						//lineSpace=50; //TODO
+						var offsetLeft= ctx.measureText("A").width * offsetSpace; // SizeOfLetter * number of char to offset 
 						console.log(lineSpace)
-						ctx.fillStyle = textColor//"rgba(0, 0, 0, 0.5)"; //TODO
-						spaceSize = new Array(textSpace).join(" ") //TODO
+						ctx.fillStyle = textColor
+						spaceSize = new Array(textSpace).join(" ")
 
 						//Prepare the text fill
 						// Calc the size of text + space
@@ -217,36 +245,44 @@
 						ctx.restore();
 					};
 
-					//TODO download as pdf or png 
-					var downloadFile = function(output){
-						var link = document.createElement('a');
-						link.download = fileName;
-						console.log(link.download)
+					var downloadFile = function(output) {
+						if (canvases.length > 1 && output !== "pdf") {
+							const toast = new bootstrap.Toast(document.getElementById('exportToast'));
+							toast.show();
 
+							return;
+						}
+
+						const canvas = canvases[0];
+						const link = document.createElement('a');
+						link.download = fileName;
+						console.log(link.download);
 
 						switch(output) {
 							case "png":
-								link.href = canvas.toDataURL("image/png")
+								link.href = canvas.toDataURL("image/png");
+								link.click();
 								break;
 							case "jpg":
-								link.href = canvas.toDataURL("image/jpeg", 0.8)
+								link.href = canvas.toDataURL("image/jpeg", 0.8);
+								link.click();
 								break;
-							case "pdf":
-								// Show the "please wait" modal
+							case "pdf": // TODO optimise the PDF generation...
 								var waitModal = new bootstrap.Modal(document.getElementById('waitModal'));
 								waitModal.show();
 
-								// Generate the PDF
 								setTimeout(function () {
 									(async () => {
-										const imgData = canvas.toDataURL('image/png');
 										const doc = new PDFDocument({ autoFirstPage: false });
 										const stream = doc.pipe(blobStream());
 
-										doc.addPage({ size: [canvas.width, canvas.height] });
-										doc.image(imgData, 0, 0, { width: canvas.width, height: canvas.height });
-										doc.end();
+										for (let canvas of canvases) {
+											const imgData = canvas.toDataURL('image/png'); 
+											doc.addPage({ size: [canvas.width, canvas.height] });
+											doc.image(imgData, 0, 0, { width: canvas.width, height: canvas.height });
+										}
 
+										doc.end();
 										stream.on('finish', function() {
 											const blobUrl = stream.toBlobURL('application/pdf');
 											link.href = blobUrl;
@@ -260,25 +296,34 @@
 								console.log("Error invalid output");
 								return 1;
 						}
-						link.click();
-
 					}
-
 					//Load a default image as example
 					//And make the first generation
 					generate();
 				</script>
-						<!-- Wait Modal -->
-						<div class="modal fade" id="waitModal" tabindex="-1" aria-hidden="true">
-							<div class="modal-dialog modal-dialog-centered">
-								<div class="modal-content text-center p-4">
-									<div class="spinner-border text-primary mb-3" role="status">
-										<span class="visually-hidden">Loading...</span>
-									</div>
-									<h5>Please wait while your PDF is being generated...</h5>
-								</div>
+				<!-- Image export error -->
+				<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
+					<div id="exportToast" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
+						<div class="d-flex">
+							<div class="toast-body">
+								Export as image is disabled for multi-page documents. Please export as PDF.
 							</div>
+							<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
 						</div>
+					</div>
+				</div>
+				<!-- Wait Modal -->
+				<div class="modal fade" id="waitModal" tabindex="-1" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered">
+						<div class="modal-content text-center p-4">
+							<div class="spinner-border text-primary mb-3" role="status">
+								<span class="visually-hidden">Loading...</span>
+							</div>
+							<h5>Please wait while your PDF is being generated...</h5>
+							<h5>Big PDF can take time...</h5>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</body>
