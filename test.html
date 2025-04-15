@@ -1,0 +1,75 @@
+<html>
+	<label>Image File:</label><br/>
+	<input type="file" id="imageLoader" name="imageLoader"/>
+	<canvas id="canvas"></canvas>
+
+
+
+	<script>
+		//https://jsfiddle.net/influenztial/qy7h5/
+		var imageLoader = document.getElementById('imageLoader');
+		imageLoader.addEventListener('change', handleImage, false);
+		var canvas = document.getElementById('canvas');
+		var ctx = canvas.getContext('2d');
+
+		//TODO pdf and pdf multi page
+		//TODO all type of image
+		function handleImage(e){
+			var reader = new FileReader();
+			reader.onload = function(event){
+				var img = new Image();
+				img.onload = function(){
+					canvas.width = img.width;
+					canvas.height = img.height;
+					ctx.drawImage(img,0,0);
+					draw('1234567');
+				}
+				img.src = event.target.result;
+			}
+			reader.readAsDataURL(e.target.files[0]);
+		}
+
+		function draw(txt){
+			//https://jsfiddle.net/y0b6fv5s/22/
+			var offsetWidth = canvas.width/2;
+			var offsetHeight = canvas.height/2;
+
+			//Calculate the future size of the rotated rectangle using pythagore 
+			//https://fr.wikipedia.org/wiki/Triangle_isoc%C3%A8le_rectangle
+			var recHeight = canvas.width/Math.SQRT2 + canvas.height/Math.SQRT2
+			
+			//Save the context before rotate
+			ctx.save()
+			ctx.translate(offsetWidth, offsetHeight );
+			ctx.rotate(45 * Math.PI / 180);
+
+			//Watermark settings
+			ctx.font="50px Arial";
+			var txtHeight=50;
+			var offsetLeft=14*8; // 8 * char numbers
+			var lineSpace=200;
+			ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+
+			var w=Math.ceil(ctx.measureText(txt).width);
+			var txt=new Array(w*2).join(txt+'       ');
+			
+			//Filling the image with the watermark
+			for(var i=0;i<Math.ceil(recHeight/(txtHeight+lineSpace));i++){
+				ctx.fillText(txt,  -(i*offsetLeft + recHeight/2),i*(txtHeight+lineSpace)-recHeight/2)
+			}
+			//Restore the context for future use
+			ctx.restore();
+		}
+	</script>
+			<a id="downloader" onclick="downloadFile()" download="image.png">Download!</a>
+			<script>
+				//TODO download as pdf or png 
+				var downloadFile = function(){
+					var link = document.createElement('a');
+					link.download = 'filename.png';
+					link.href = document.getElementById('canvas').toDataURL()
+					link.click();
+				}
+			</script>
+</html>
+

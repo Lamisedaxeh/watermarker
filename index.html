@@ -1,0 +1,259 @@
+<!doctype html> 
+<html lang='en'> 
+	<head> 
+		<meta charset='utf-8'> 
+		<title>Watermarker offline</title> 
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> 
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+		<!--<script src=" https://cdn.jsdelivr.net/npm/pdfkit@0.13.0/js/pdfkit.standalone.min.js "></script>-->
+		<script src="./pdfkit.standalone.js"></script><!--TODO CHANGE ME -->
+		<!--<script src=" https://cdn.jsdelivr.net/npm/blob-stream@0.1.3/index.min.js "></script>-->
+		<script src="./blob-stream.js"></script><!--TODO CHANGE ME -->
+
+
+
+
+		<!--
+		<script src=" https://cdn.jsdelivr.net/npm/pdfkit@0.13.0/js/pdfkit.standalone.min.js "></script> 
+		<script src=" https://cdn.jsdelivr.net/npm/blob-stream@0.1.3/index.min.js "></script> 
+		-->
+	</head> 
+	<body>
+		<div class="container">
+			<div class=row>
+				<div class=col>
+					<form onchange="generate()">
+
+						<label></label><br/>
+						<div class="mb-3">
+							<label for="formFile" class="form-label">Upload document to watermark:</label>
+							<input class="form-control" type="file" accept="image/*,.pdf" id="imageLoader" name="imageLoader" value="./cvTest.png"/>
+						</div>
+
+						<div class="mb-3">
+							<label for="watermarkText" class="form-label">Text : </label>
+							<input onkeyup="generate()" type="text" class="form-control" value="My Privacy watermark" placeholder="My Privacy watermark" id="watermarkText" aria-describedby="watermarkTextHelp">
+							<div id="watermarkTextHelp" class="form-text">Text used to watermark the document.</div>
+						</div>
+
+						<div class="mb-3">
+							<label for="textSize" class="form-label">Text size : </label>
+							<input type="range" class="form-range" min="3" max="75" step="1" value="25" id="textSize" aria-describedby="textSizeHelp">
+							<div id="textSizeHelp" class="form-text">Change the font size.</div>
+						</div>
+
+						<div class="mb-3">
+							<label for="textSpace" class="form-label">Space between watermark : </label>
+							<input type="range" class="form-range" min="0" max="100" step="1" value="8" id="textSpace" aria-describedby="textSpaceHelp">
+							<div id="textSpaceHelp" class="form-text">Change the inline space between each watermark.</div>
+						</div>
+
+						<div class="mb-3">
+							<label for="lineSpace" class="form-label">Space between line : </label>
+							<input type="range" class="form-range" min="3" max="150" step="1" value="50" id="lineSpace" aria-describedby="lineSpaceHelp">
+							<div id="textSpaceHelp" class="form-text">Change the space between each watermark line.</div>
+						</div>
+
+						<div class="mb-3">
+							<label for="offsetSpace" class="form-label">Offset on each line : </label>
+							<input type="range" class="form-range" min="0" max="100" step="1" value="8" id="offsetSpace" aria-describedby="offsetSpaceHelp">
+							<div id="offsetSpaceHelp" class="form-text">Shifted space between each watermark line.</div>
+						</div>
+
+
+
+						<div class="mb-3"><!-- TODO fix me-->
+                                                        <label for="textColor" class="form-label">Watermark color :</label>
+							<div class=text-center><!-- TODO center ? -->
+                                                                <input type="color" class="form-control form-control-color" id="textColor" value="#FF0000" title="Choose the watermark color">
+                                                        </div>
+                                                </div>
+
+						<div class="mb-3">
+							<label for="alpha" class="form-label"> Watermark opacity : </label>
+							<input type="range" class="form-range" min="0" max="255" step="1" value="64" id="alpha" aria-describedby="alphaHelp">
+							<div id="alphaHelp" class="form-text">Choose the opacity of the watermark.</div>
+						</div>
+
+
+						<div class="mb-3 text-center">
+							<button type="button" class="btn btn-primary" onclick="generate()"><i class="fa-solid fa-gears"></i><span> Regenerate</span></button>
+							<button type="button" class="btn btn-warning" onclick="downloadFile('png')"><i class="fa-regular fa-file-image"></i><span> Download PNG</span></button>
+							<button type="button" class="btn btn-info" onclick="downloadFile('jpg')"><i class="fa-regular fa-image"></i><span> Download JPG</span</button>
+							<button type="button" class="btn btn-danger" onclick="downloadFile('pdf')"><i class="fa-regular fa-file"></i><span> Download PDF</span></button>
+						</div>
+					</form>
+
+				</div>
+				<div class="col">
+					<canvas style="max-width: 100%;max-height: 100%;" id="canvas"></canvas>
+				</div>
+
+				<script>
+					/* Form TODO :
+					- Custom space in line
+						- Verify all type of image
+						- Export vers PDF 
+						- Import PDF
+						- Import PDF multi page
+						- Export PDF multi page
+						- Export page PDF to multi png in zip 
+					 */
+
+					//Get canvas information
+					var canvas = document.getElementById('canvas');
+					var ctx = canvas.getContext('2d');
+
+					//Handle the image upload into canvas 
+					//https://jsfiddle.net/influenztial/qy7h5/
+					/*var imageLoader = document.getElementById('imageLoader');
+					//imageLoader.addEventListener('change', handleImage, false);
+					function handleImage(e){
+						var reader = new FileReader();
+						reader.onload = function(event){
+							var img = ne	Downloadw Image();
+							img.onload = function(){
+								drawImage(img);
+								drawTxt('1234567');
+							}
+							img.src = event.target.result;
+						}
+						reader.readAsDataURL(e.target.files[0]);
+					}*/
+
+
+					var watermarkText = "My Privacy watermark"
+					var textSpace = 8
+					var lineSpace = 50
+					var offsetSpace = 8
+					var textColor = "rgba(0, 0, 0, 0.5)"
+
+					var fileName = "Dummy_CV_test_file"
+					function generate(){ 
+						watermarkText = document.getElementById('watermarkText').value;
+						textSpace = Number(document.getElementById('textSpace').value);
+						lineSpace = Number(document.getElementById('lineSpace').value);
+						offsetSpace = Number(document.getElementById('offsetSpace').value);
+						textColor = document.getElementById('textColor').value + Number(document.getElementById('alpha').value).toString(16) ;
+						console.log("color " + textColor)
+
+
+
+						//Update offset max value 
+						document.getElementById("offsetSpace").max = watermarkText.length + textSpace ;
+						/*//Removed should be done by the browser
+						if (document.getElementById("offsetSpace").max < document.getElementById("offsetSpace").value){
+							document.getElementById("offsetSpace").value = document.getElementById("offsetSpace").max
+						}*/
+
+
+						console.log("generating canvas")
+						var reader = new FileReader();
+						reader.onload = function(event){
+							var img = new Image();
+							img.onload = function(){
+								drawImage(img);
+								drawTxt(watermarkText);
+							}
+							img.src = event.target.result;
+						}
+						if (document.getElementById("imageLoader").files[0]){
+							var file = document.getElementById("imageLoader").files[0];
+							fileName = file.name
+							reader.readAsDataURL(file);
+						} else {
+							fetch("./cvTest.png")
+								.then(res => res.blob()) // Gets the response and returns it as a blob
+								.then(blob => {
+									fileName = "Dummy_CV_test_file"
+									reader.readAsDataURL(blob);
+								});
+						} 
+					}
+
+					//Draw the image on canvas
+					function drawImage(img){
+						canvas.width = img.width;
+						canvas.height = img.height;
+						ctx.drawImage(img,0,0);
+					}
+
+					//Add watermark to canvas
+					function drawTxt(txt){
+						//https://jsfiddle.net/y0b6fv5s/22/
+						var offsetWidth = canvas.width/2;
+						var offsetHeight = canvas.height/2;
+
+						//Calculate the future size of the rotated rectangle using pythagore 
+						//https://fr.wikipedia.org/wiki/Triangle_isoc%C3%A8le_rectangle
+						var squareHeight = canvas.width/Math.SQRT2 + canvas.height/Math.SQRT2 //Height of with of the square
+
+						//Save the context before rotate
+						ctx.save()
+						ctx.translate(offsetWidth, offsetHeight );
+						ctx.rotate(45 * Math.PI / 180);
+
+						//Watermark settings
+						ctx.font = parseFloat(document.getElementById('textSize').value) + "px Arial";//TODO Change with a case size fixed font
+						var txtHeight=ctx.measureText("A").actualBoundingBoxAscent + ctx.measureText("A").actualBoundingBoxDescent; // calc the text Height
+						var offsetLeft= ctx.measureText("A").width * offsetSpace; // SizeOfLetter * number of char to offset //TODO
+						//lineSpace=50; //TODO
+						console.log(lineSpace)
+						ctx.fillStyle = textColor//"rgba(0, 0, 0, 0.5)"; //TODO
+						spaceSize = new Array(textSpace).join(" ") //TODO
+
+						//Prepare the text fill
+						// Calc the size of text + space
+						var w=Math.ceil(ctx.measureText(txt + spaceSize).width);
+
+						//Calc the required number of repetition with square size + offsetMax * 2(quick patch) 
+						var txt=new Array(Math.ceil((squareHeight + w)/w)*2).join(txt + spaceSize);
+
+						//Filling the image with the watermark
+						for(var i=0;i<Math.ceil(squareHeight/(txtHeight+lineSpace));i++){
+							ctx.fillText(txt, -((i*offsetLeft % w ) + squareHeight/2), i * (txtHeight+lineSpace) - squareHeight/2)
+						}
+						//Restore the context for future use
+						ctx.restore();
+					};
+
+					//TODO download as pdf or png 
+					var downloadFile = function(output){
+						var link = document.createElement('a');
+						link.download = fileName;
+						console.log(link.download)
+
+						switch(output) {
+							case "png":
+								link.href = canvas.toDataURL("image/png")
+								break;
+							case "jpg":
+								link.href = canvas.toDataURL("image/jpeg", 0.8)
+								break;
+							case "pdf":
+								const doc = new PDFDocument();
+								var stream = doc.pipe(blobStream());
+
+								doc.end();
+								stream.on('finish', function() {
+									var blob = stream.toBlobURL('application/pdf');
+									link.href = blob;
+									link.click();//Required
+								});
+
+								break;
+							default:
+								console.log("Error invalid output");
+								return 1;
+						}
+						link.click();
+					}
+
+					//Load a default image as example
+					//And make the first generation
+					generate();
+				</script>
+			</div>
+		</div>
+	</body>
+</html>

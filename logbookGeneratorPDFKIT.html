@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang='en'>
+	<head>
+		<meta charset='utf-8'>
+		<title>LogBook Generator</title>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+		<script src=" https://cdn.jsdelivr.net/npm/pdfkit@0.13.0/js/pdfkit.standalone.min.js "></script>
+		<script src=" https://cdn.jsdelivr.net/npm/blob-stream@0.1.3/index.min.js "></script>
+	</head>
+	<body>
+		<div class="container">
+			<div class=row>
+				<div class=col>
+					<form onchange="generate()">
+						<div class="mb-3">
+							<label for="vLineWidth" class="form-label">Vertical line width : </label>
+							<input type="range" class="form-range" min="0" max="10" step="0.1" value="2" id="vLineWidth" aria-describedby="vLineWidthHelp">
+							<div id="vLineWidthHelp" class="form-text">Change the vertical line thickness.</div>
+						</div>
+						<div class="mb-3">
+							<label for="hLineWidth" class="form-label">Horizontal line width : </label>
+							<input type="range" class="form-range" min="0" max="10" step="0.1" value="0.5" id="hLineWidth" aria-describedby="hLineWidthHelp">
+							<div id="hLineWidthHelp" class="form-text">Change the horizontal line thickness.</div>
+						</div>
+
+						<div class="mb-3">
+							<label for="hLineColor" class="form-label">Choose the horizontal line color :</label>
+							<div class=text-center>
+								<input type="color" class="form-control form-control-color" id="hLineColor" value="#FFF" title="Choose the linecolor">
+							</div>
+						</div>
+
+						<div>
+							<legend>Collum info</legend>
+							<div class="mb-3">
+								<label for="NbCollum" class="form-label">Number of collum : </label>
+								<input type="range" class="form-range" min="1" max="15" step="1" value="4" id="nbCollum" aria-describedby="nbCollumHelp">
+								<div id="nbCollumHelp" class="form-text">Set the numbers of collum.</div>
+								<!--TODO by collum size-->
+							</div>
+						</div>
+
+						<div>
+							<legend>Row info</legend>
+							<div class="mb-3">
+								<label for="NbRow" class="form-label">Number of row : </label>
+								<input type="range" class="form-range" min="0" max="40" step="1" value="15" id="nbRow" aria-describedby="nbRowHelp">
+								<div id="nbRowHelp" class="form-text">Set the numbers of row.</div>
+								<!--TODO by row size-->
+							</div>
+						</div>
+
+
+
+						<div>
+							<legend>Cell pagging</legend>
+							<div class="mb-3">
+								<label for="paddingLeft" class="form-label">Left padding on each cell  : </label>
+								<input type="range" class="form-range" min="0" max="10" step="0.1" value=5 id="paddingLeft" aria-describedby="paddingLeftHelp">
+								<div id="paddingLeftHelp" class="form-text">Change the space between the left border of a cell and the content.</div>
+							</div>
+
+							<div class="mb-3">
+								<label for="paddingRight" class="form-label">Right padding on each cell  : </label>
+								<input type="range" class="form-range" min="0" max="10" step="0.1" value=5 id="paddingRight" aria-describedby="paddingRightHelp">
+								<div id="paddingLeftRight" class="form-text">Change the space between the right border of a cell and the content.</div>
+							</div>
+						</div>
+
+
+
+						<div class="mb-3 text-center">
+							<button type="button" class="btn btn-primary" onclick="generate()">Regenerate</button>
+						</div>
+					</form>
+				</div>
+
+				<iframe class="col" id='pdfV'></iframe>
+
+				<script>
+					/*
+					parseFloat(document.getElementById('hLineWidth').value);
+						parseFloat(document.getElementById('vLineWidth').value);
+						document.getElementById('hLineColor').value;
+						parseFloat(document.getElementById('paddingLeft').value);
+						parseFloat(document.getElementById('paddingRight').value);
+
+
+						nbCollum = parseFloat(document.getElementById('nbCollum').value);
+						collumWidths = 100 / parseFloat(document.getElementById('nbCollum').value);
+
+						nbRow = parseFloat(document.getElementById('nbRow').value);
+
+					 */
+					// create a document and pipe to a blob
+					var doc = new PDFDocument();
+					var stream = doc.pipe(blobStream());
+
+					// an SVG path
+					/*doc
+						  .scale(0.6)
+						  .translate(470, 130)
+						  .path('M 250,75 L 323,301 131,161 369,161 177,301 z')
+						  .fill('red', 'even-odd')
+						  .restore();
+					 */
+					// and some justified text wrapped into columns
+					/*doc
+						  .text('And here is some wrapped text...', 100, 300)
+						  .font('Times-Roman', 13)
+						  .moveDown()
+						  .text(lorem, {
+						    width: 412,
+						    align: 'justify',
+						    indent: 30,
+						    columns: 2,
+						    height: 300,
+						    ellipsis: true
+						  });
+					 */
+
+					// end and display the document in the iframe to the right
+					doc.end();
+
+					stream.on('finish', function() {
+						const targetElement = document.querySelector('#pdfV');
+						targetElement.src = stream.toBlobURL('application/pdf');
+					});
+
+					//TODO MetaData
+					//$scope.stats = 'generated in ' + (new Date().getTime() - lastGen.getTime()) + ' ms';
+
+					//Live update :
+					/*
+						pdfMake.createPdf(dd).getDataUrl().then((dataUrl) => {
+							const targetElement = document.querySelector('#pdfV');
+							targetElement.src = dataUrl;
+						}, err => {
+							console.error(err);
+						});
+					 */
+					//pdfMake.createPdf(dd).getDataUrl()
+
+					generate();
+				</script>
+			</div>
+		</div>
+	</body>
+</html>
