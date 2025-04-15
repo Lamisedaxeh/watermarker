@@ -11,7 +11,14 @@
 ✅ Built with HTML, JavaScript, and Bootstrap  
 ✅ Deployable on GitLab Pages
 
----
+
+
+## 🚀 Live Demo
+
+Check out the live version here:  
+📄 [https://watermarker-13b1b0.gitlab.io/](https://watermarker-13b1b0.gitlab.io/)
+
+
 
 ## ✨ Features
 
@@ -33,20 +40,10 @@
 - **Watermark opacity**  
   Set how transparent your watermark should appear.
 
----
 
 ## 📷 Screenshot
 
-![Watermarker UI](./AppScreenshot.png)
-
----
-
-## 🚀 Live Demo
-
-Check out the live version here:  
-📄 [https://watermarker-13b1b0.gitlab.io/](https://watermarker-13b1b0.gitlab.io/)
-
----
+[![Watermarker UI](./AppScreenshot.png)](https://watermarker-13b1b0.gitlab.io/)
 
 ## 📁 How to Use Locally
 
@@ -54,7 +51,6 @@ Check out the live version here:
 2. Open `index.html` in your browser
 3. Done! Everything works locally
 
----
 
 ## 🛠 Built With
 
@@ -66,7 +62,6 @@ Check out the live version here:
 - blob-stream
 - font-awesome
 
----
 
 ## 📄 License
 
